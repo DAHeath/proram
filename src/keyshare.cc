@@ -22,15 +22,15 @@ template KeyShare<Mode::Verify> KeyShare<Mode::Verify>::input(Zp);
 template <Mode mode>
 KeyShare<mode> KeyShare<mode>::input(Zp key, Zp mask) {
   if constexpr (mode == Mode::Input) {
-    return { 0 };
+    return KeyShare<mode> { 0 };
   } else if constexpr (mode == Mode::Verify) {
     send(key-mask);
-    return mask;
+    return KeyShare<mode> {mask };
   } else if constexpr (mode == Mode::Check) {
     check(key - mask);
-    return mask;
+    return KeyShare<mode> { mask };
   } else {
-    return recv();
+    return KeyShare<mode> { recv() };
   }
 }
 

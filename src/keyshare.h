@@ -12,11 +12,7 @@ template <Mode mode>
 struct KeyShare {
 public:
   constexpr KeyShare() { }
-  constexpr KeyShare(Zp key) {
-    if constexpr (mode == Mode::Verify || mode == Mode::Check) {
-      this->val = key;
-    }
-  }
+  constexpr explicit KeyShare(Zp key) : val(key) { }
 
   // V inputs a chosen key
   static KeyShare input(Zp);

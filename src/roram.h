@@ -21,7 +21,7 @@ struct RORAM {
     std::vector<std::uint32_t> permutation;
     std::vector<Zp> keys;
     std::vector<KeyShare<mode>> permuted_keys;
-    std::vector<Zp> encryptions;
+    std::vector<Zp> buffer;
     std::size_t w;
     std::size_t r;
 };
