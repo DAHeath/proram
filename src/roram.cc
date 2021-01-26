@@ -1,17 +1,25 @@
 #include "roram.h"
 #include "permute.h"
+#include "draw.h"
 
 
 template <Mode mode>
-RORAM<mode> RORAM<mode>::fresh(
-    const std::vector<std::uint32_t>& permutation, const std::vector<Zp>& keys) {
-
-  const auto n = keys.size();
+RORAM<mode> RORAM<mode>::fresh(std::size_t n, const std::vector<std::uint32_t>& permutation) {
+  if constexpr (mode == Mode::Input) {
+    assert(permutation.size() == n);
+  }
+  std::vector<Zp> keys;
+  if constexpr (mode == Mode::Verify || mode == Mode::Check) {
+    keys.resize(n);
+    for (std::size_t i = 0; i < n; ++i) {
+      keys[i] = draw();
+    }
+  }
 
   std::vector<KeyShare<mode>> pkeys(n);
   for (std::size_t i = 0; i < n; ++i) {
     Zp k;
-    if constexpr (mode == Mode::Prove || mode == Mode::Check) {
+    if constexpr (mode == Mode::Verify || mode == Mode::Check) {
       k = keys[i];
     }
     pkeys[i] = KeyShare<mode>::input(k);
@@ -33,13 +41,13 @@ RORAM<mode> RORAM<mode>::fresh(
 }
 
 template RORAM<Mode::Input> RORAM<Mode::Input>::fresh(
-    const std::vector<std::uint32_t>&, const std::vector<Zp>&);
+    std::size_t, const std::vector<std::uint32_t>&);
 template RORAM<Mode::Prove> RORAM<Mode::Prove>::fresh(
-    const std::vector<std::uint32_t>&, const std::vector<Zp>&);
+    std::size_t, const std::vector<std::uint32_t>&);
 template RORAM<Mode::Check> RORAM<Mode::Check>::fresh(
-    const std::vector<std::uint32_t>&, const std::vector<Zp>&);
+    std::size_t, const std::vector<std::uint32_t>&);
 template RORAM<Mode::Verify> RORAM<Mode::Verify>::fresh(
-    const std::vector<std::uint32_t>&, const std::vector<Zp>&);
+    std::size_t, const std::vector<std::uint32_t>&);
 
 
 template <Mode mode>
@@ -47,20 +55,16 @@ Share<mode> RORAM<mode>::read() {
   const auto key = permuted_keys[r];
 
   Share<mode> out;
-
-  // TODO subtract or add?
-
   if constexpr (mode == Mode::Input) {
     // in input mode, just read the cleartext value stored in the array
-    out = encryptions[permutation[r]];
+    out = Share<mode> { encryptions[permutation[r]] };
   } else if constexpr (mode == Mode::Prove) {
     // in prove mode, strip off the key and replace it with the key mask
-    out = encryptions[permutation[r]] + key.data();
+    out = Share<mode> { encryptions[permutation[r]] + key.data() };
   } else {
     // otherwise, use the key mask
-    out = key.data();
+    out = Share<mode> { key.data() };
   }
-
   ++r;
   return out;
 }
@@ -75,14 +79,14 @@ template <Mode mode>
 void RORAM<mode>::write(Share<mode> x) {
   Zp key;
   Zp mask;
-  if constexpr (mode == Mode::Check || mode == Mode::Verify) {
+  if constexpr (mode == Mode::Verify || mode == Mode::Check) {
     key = keys[w];
     mask = x.data();
   }
   const auto keyshare = KeyShare<mode>::input(key, mask);
 
   if constexpr (mode == Mode::Prove) {
-    encryptions[w] = x.data() + keyshare.data();
+    encryptions[w] = x.data() - keyshare.data();
   } else if constexpr (mode == Mode::Input) {
     encryptions[w] = x.data();
   }

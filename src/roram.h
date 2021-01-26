@@ -11,7 +11,8 @@
 template <Mode mode>
 struct RORAM {
   public:
-    static RORAM fresh(const std::vector<std::uint32_t>& permutation, const std::vector<Zp>& keys);
+    // permutation is provided by input party
+    static RORAM fresh(std::size_t n, const std::vector<std::uint32_t>& permutation);
 
     Share<mode> read();
     void write(Share<mode>);

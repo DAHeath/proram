@@ -2,7 +2,8 @@
 #define PRORAM_SHARE_H__
 
 
-#include "keyshare.h"
+#include "mode.h"
+#include "zp.h"
 
 #include <span>
 
@@ -11,26 +12,21 @@ template <Mode mode>
 struct Share {
 public:
   constexpr Share() { }
-  constexpr Share(Zp val) {
+  constexpr explicit Share(Zp val) : val(val) { }
+  constexpr static Share constant(Zp val) {
+    Share out;
     if constexpr (mode == Mode::Input) {
-      this->val = val;
+      out.val = val;
     } else if constexpr (mode == Mode::Verify || mode == Mode::Check) {
-      this->val = val*delta;
+      out.val = val*delta;
     }
-  }
-
-  constexpr Share(bool val) {
-    if constexpr (mode == Mode::Input) {
-      this->val = val;
-    } else if constexpr (mode == Mode::Verify || mode == Mode::Check) {
-      if (val) { this->val = delta; }
-    }
+    return out;
   }
 
   // P inputs a single bit
-  static Share input(bool);
+  static Share bit(bool);
   // P inputs a 32 bit value
-  static Share input(std::uint32_t);
+  static Share word(std::uint32_t);
 
   constexpr Share& operator+=(Share o) {
     val += o.val;
@@ -47,19 +43,23 @@ public:
     return *this;
   }
 
+  EXTEND_VECTOR_SPACE(Share, Zp)
+
   constexpr Share& operator*=(bool o) {
     val *= o;
     return *this;
   }
 
-  EXTEND_VECTOR_SPACE(Share, Zp)
-
   EXTEND_OUT_OF_PLACE_MUL(Share, bool)
 
   void assert_zero() const;
 
-private:
+  Zp data() const { return val; }
+  Zp& data() { return val; }
+
   static Zp delta;
+
+private:
   Zp val;
 };
 
