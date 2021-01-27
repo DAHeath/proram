@@ -1,4 +1,5 @@
 #include "permute.h"
+#include "comms.h"
 
 #include <vector>
 
@@ -162,6 +163,9 @@ void permute(
   const std::size_t n = keys.size();
   if (n > 0) {
     const auto logn = log2(n);
+
+    ot_reserve<mode>(n * logn - n + 1);
+
     // permutation only set up for powers of two
     std::vector<bool> visited(n/2);
     std::vector<bool> programming_buffer(n);

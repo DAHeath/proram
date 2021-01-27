@@ -33,6 +33,26 @@ void ot_choose(bool b) {
   ot_choices.push_back(b);
 }
 
+
+template <Mode mode>
+void ot_reserve(std::size_t n) {
+  if constexpr (mode == Mode::Verify) {
+    ot_zeros.reserve(ot_zeros.size() + n);
+    ot_correlation.reserve(ot_correlation.size() + n);
+  } else if constexpr (mode == Mode::Prove) {
+    ot_receipts.reserve(ot_receipts.size() + n);
+  } else if constexpr (mode == Mode::Input) {
+    ot_choices.reserve(ot_choices.size() + n);
+  }
+}
+
+
+template void ot_reserve<Mode::Input>(std::size_t);
+template void ot_reserve<Mode::Prove>(std::size_t);
+template void ot_reserve<Mode::Check>(std::size_t);
+template void ot_reserve<Mode::Verify>(std::size_t);
+
+
 std::pair<bool, std::span<Zp>> ot_recv(std::size_t n) {
   bool b = ot_choices[ot_r];
   const auto ot_so_far = ot_receipts.size();

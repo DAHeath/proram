@@ -12,6 +12,9 @@ std::pair<bool, std::span<Zp>> ot_recv(std::size_t);
 void ot_choose(bool);
 void ot_check(std::span<Zp>);
 
+template <Mode mode>
+void ot_reserve(std::size_t n);
+
 void send(Zp);
 Zp recv();
 void check(Zp);
