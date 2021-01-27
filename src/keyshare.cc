@@ -24,8 +24,8 @@ KeyShare<mode> KeyShare<mode>::input(Zp key, Zp mask) {
   if constexpr (mode == Mode::Input) {
     return KeyShare<mode> { 0 };
   } else if constexpr (mode == Mode::Verify) {
-    send(key-mask);
-    return KeyShare<mode> {mask };
+    send(key - mask);
+    return KeyShare<mode> { mask };
   } else if constexpr (mode == Mode::Check) {
     check(key - mask);
     return KeyShare<mode> { mask };
@@ -50,12 +50,12 @@ void scale(bool s, std::span<KeyShare<mode>> xs) {
   } else if constexpr (mode == Mode::Verify) {
 
     Zp* masks = reinterpret_cast<Zp*>(xs.data());
-    ot_send({ masks, xs.size() }, { masks, xs.size() });
+    ot_send({ masks, xs.size() });
 
   } else if constexpr (mode == Mode::Check) {
 
     Zp* masks = reinterpret_cast<Zp*>(xs.data());
-    ot_check({ masks, xs.size() }, { masks, xs.size() });
+    ot_check({ masks, xs.size() });
 
   } else {
     const auto [choice, diffs] = ot_recv(xs.size());

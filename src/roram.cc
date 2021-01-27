@@ -14,15 +14,13 @@ RORAM<mode> RORAM<mode>::fresh(std::size_t n, const std::vector<std::uint32_t>& 
   std::vector<Zp> keys;
   if constexpr (mode == Mode::Verify || mode == Mode::Check) {
     keys.resize(n);
-    for (std::size_t i = 0; i < n; ++i) {
-      keys[i] = draw();
-    }
   }
 
   std::vector<KeyShare<mode>> pkeys(n);
   for (std::size_t i = 0; i < n; ++i) {
     Zp k;
     if constexpr (mode == Mode::Verify || mode == Mode::Check) {
+      keys[i] = draw();
       k = keys[i];
     }
     pkeys[i] = KeyShare<mode>::input(k);
@@ -87,6 +85,7 @@ void RORAM<mode>::write(Share<mode> x) {
   if constexpr (mode == Mode::Verify || mode == Mode::Check) {
     key = keys[w];
     mask = x.data();
+    /* std::cout << key.data() << ' ' << mask.data() << '\n'; */
   }
   const auto keyshare = KeyShare<mode>::input(key, mask);
 

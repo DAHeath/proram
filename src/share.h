@@ -54,7 +54,7 @@ public:
 
   void assert_zero() const;
 
-  Zp data() const { return val; }
+  const Zp& data() const { return val; }
   Zp& data() { return val; }
 
   static Zp delta;

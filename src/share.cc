@@ -53,12 +53,12 @@ void scale(bool s, std::span<Share<mode>> xs) {
   } else if constexpr (mode == Mode::Verify) {
 
     Zp* masks = reinterpret_cast<Zp*>(xs.data());
-    ot_send({ masks, xs.size() }, { masks, xs.size() });
+    ot_send({ masks, xs.size() });
 
   } else if constexpr (mode == Mode::Check) {
 
     Zp* masks = reinterpret_cast<Zp*>(xs.data());
-    ot_check({ masks, xs.size() }, { masks, xs.size() });
+    ot_check({ masks, xs.size() });
 
   } else {
     const auto [choice, diffs] = ot_recv(xs.size());

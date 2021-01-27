@@ -43,7 +43,7 @@ void permute(
   if (logn == 1) {
     bool b = false;
     if constexpr (mode == Mode::Input) {
-      b = src_to_tgt[0] > src_to_tgt[1];
+      b = src_to_tgt[0] != 0;
     }
     bswap<mode>(b, xs[0], xs[1]);
   } else {
@@ -166,13 +166,13 @@ void permute(
     std::vector<bool> visited(n/2);
     std::vector<bool> programming_buffer(n);
 
-    std::vector<std::uint32_t> tgt_to_src;
-    if constexpr (mode == Mode::Input) {
-      tgt_to_src.resize(n);
-      for (std::size_t i = 0; i < n; ++i) { tgt_to_src[permutation[i]] = i; }
-    }
+    std::vector<std::uint32_t> tgt_to_src = { permutation.begin(), permutation.end() };
 
-    std::vector<std::uint32_t> src_to_tgt = { permutation.begin(), permutation.end() } ;
+    std::vector<std::uint32_t> src_to_tgt;
+    if constexpr (mode == Mode::Input) {
+      src_to_tgt.resize(n);
+      for (std::size_t i = 0; i < n; ++i) { src_to_tgt[permutation[i]] = i; }
+    }
 
     permute<mode>(
         logn,

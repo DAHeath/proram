@@ -12,7 +12,7 @@ template <Mode mode>
 struct KeyShare {
 public:
   constexpr KeyShare() { }
-  constexpr explicit KeyShare(Zp key) : val(key) { }
+  constexpr explicit KeyShare(Zp key) : key(key) { }
 
   // V inputs a chosen key
   static KeyShare input(Zp);
@@ -21,26 +21,27 @@ public:
   static KeyShare input(Zp, Zp);
 
   constexpr KeyShare& operator+=(KeyShare o) {
-    val += o.val;
+    key += o.key;
     return *this;
   }
 
   constexpr KeyShare& operator-=(KeyShare o) {
-    val -= o.val;
+    key -= o.key;
     return *this;
   }
 
   constexpr KeyShare& operator*=(Zp o) {
-    val *= o;
+    key *= o;
     return *this;
   }
 
   EXTEND_VECTOR_SPACE(KeyShare, Zp)
 
-  Zp data() const { return val; }
+  const Zp& data() const { return key; }
+  Zp& data() { return key; }
 
 private:
-  Zp val;
+  Zp key;
 };
 
 

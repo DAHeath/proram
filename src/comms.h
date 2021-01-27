@@ -7,10 +7,10 @@
 
 #include <span>
 
-void ot_send(std::span<const Zp> correlation, std::span<Zp> zeros);
+void ot_send(std::span<Zp>);
 std::pair<bool, std::span<Zp>> ot_recv(std::size_t);
 void ot_choose(bool);
-void ot_check(std::span<const Zp> correlation, std::span<Zp> zeros);
+void ot_check(std::span<Zp>);
 
 void send(Zp);
 Zp recv();

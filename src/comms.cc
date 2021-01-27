@@ -19,13 +19,13 @@ std::size_t message_n = 0;
 // TODO use actual communication primitives
 
 
-void ot_send(std::span<const Zp> corr, std::span<Zp> zs) {
+void ot_send(std::span<Zp> corr) {
   const auto n = corr.size();
   assert(zs.size() == n);
   for (std::size_t i = 0; i < n; ++i) {
     ot_correlation.push_back(corr[i]);
-    zs[i] = draw();
-    ot_zeros.push_back(zs[i]);
+    corr[i] = draw();
+    ot_zeros.push_back(corr[i]);
   }
 }
 
@@ -44,7 +44,7 @@ std::pair<bool, std::span<Zp>> ot_recv(std::size_t n) {
   return { b, { ot_receipts.data() + ot_so_far, n } };
 }
 
-void ot_check(std::span<const Zp> correlation, std::span<Zp> zeros) {
+void ot_check(std::span<Zp>) {
   // TODO
 }
 
