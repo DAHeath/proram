@@ -1,39 +1,43 @@
 #include "share.h"
 #include "hash.h"
+#include "proram.h"
+
+
 #include <random>
-#include "roram.h"
-
-
-#include "permute.h"
-
 #include <iostream>
 
 
 template <Mode mode>
-void bbswap(bool b, KeyShare<mode>& x, KeyShare<mode>& y) {
-  auto xy = x - y;
-  scale<mode>(b, { &xy , 1 });
-  x -= xy;
-  y += xy;
-}
-
-template <Mode mode>
 void simple() {
   const auto con = [](Zp i) { return Share<mode>::constant(i); };
-  auto R = RORAM<mode>::fresh(4, { 1, 3, 2, 0 });
 
 
-  R.write(con(0));
+  auto R = PrORAM<mode>::fresh(20, { 1, 0, 2, 3, 0, 1, 2, 3 });
+
   R.write(con(1));
-  (R.read() - con(1)).assert_zero();
+  R.write(con(0));
   R.write(con(2));
   R.write(con(3));
 
-
-
-  (R.read() - con(3)).assert_zero();
-  (R.read() - con(2)).assert_zero();
   (R.read() - con(0)).assert_zero();
+  (R.read() - con(1)).assert_zero();
+  (R.read() - con(2)).assert_zero();
+  (R.read() - con(3)).assert_zero();
+
+  /* auto R = RORAM<mode>::fresh(4, { 1, 3, 2, 0 }); */
+
+
+  /* R.write(con(0)); */
+  /* R.write(con(1)); */
+  /* (R.read() - con(1)).assert_zero(); */
+  /* R.write(con(2)); */
+  /* R.write(con(3)); */
+
+
+
+  /* (R.read() - con(3)).assert_zero(); */
+  /* (R.read() - con(2)).assert_zero(); */
+  /* (R.read() - con(0)).assert_zero(); */
 }
 
 

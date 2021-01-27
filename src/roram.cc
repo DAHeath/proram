@@ -3,9 +3,6 @@
 #include "draw.h"
 
 
-#include <iostream>
-
-
 template <Mode mode>
 RORAM<mode> RORAM<mode>::fresh(std::size_t n, const std::vector<std::uint32_t>& permutation) {
   if constexpr (mode == Mode::Input) {
@@ -32,7 +29,7 @@ RORAM<mode> RORAM<mode>::fresh(std::size_t n, const std::vector<std::uint32_t>& 
   RORAM<mode> out;
   out.permutation = permutation;
   out.keys = keys;
-  out.permuted_keys = pkeys;
+  out.permuted_keys = std::move(pkeys);
   if constexpr (mode == Mode::Input || mode == Mode::Prove) {
     out.buffer.resize(n);
   }
@@ -54,8 +51,6 @@ template RORAM<Mode::Verify> RORAM<Mode::Verify>::fresh(
 template <Mode mode>
 Share<mode> RORAM<mode>::read() {
   const auto key = permuted_keys[r];
-
-  /* std::cout << "KEY: " << key.data().data() << '\n'; */
 
   Share<mode> out;
   if constexpr (mode == Mode::Input) {
@@ -85,7 +80,6 @@ void RORAM<mode>::write(Share<mode> x) {
   if constexpr (mode == Mode::Verify || mode == Mode::Check) {
     key = keys[w];
     mask = x.data();
-    /* std::cout << key.data() << ' ' << mask.data() << '\n'; */
   }
   const auto keyshare = KeyShare<mode>::input(key, mask);
 

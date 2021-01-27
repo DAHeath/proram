@@ -11,6 +11,8 @@
 template <Mode mode>
 struct Share {
 public:
+  static Zp delta;
+
   constexpr Share() { }
   constexpr explicit Share(Zp val) : val(val) { }
   constexpr static Share constant(Zp val) {
@@ -57,11 +59,12 @@ public:
   const Zp& data() const { return val; }
   Zp& data() { return val; }
 
-  static Zp delta;
-
 private:
   Zp val;
 };
+
+template<> Zp Share<Mode::Verify>::delta;
+template<> Zp Share<Mode::Check>::delta;
 
 
 // Scale a vector of shares by a {0, 1} value chosen by P.
