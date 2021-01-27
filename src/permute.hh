@@ -31,7 +31,21 @@ void bswap(bool b, KeyShare<mode>& x, KeyShare<mode>& y) {
 }
 
 
-template <Mode mode>
+template <Mode mode, typename T, std::size_t width>
+void bswap(bool b, std::array<T, width>& xs, std::array<T, width>& ys) {
+  std::array<T, width> xys;
+  for (std::size_t i = 0; i < width; ++i) {
+    xys[i] = xs[i] - ys[i];
+  }
+  scale<mode>(b, xys);
+  for (std::size_t i = 0; i < width; ++i) {
+    xs[i] -= xys[i];
+    ys[i] += xys[i];
+  }
+}
+
+
+template <Mode mode, typename T>
 void permute(
     std::size_t logn,
     std::uint32_t* src_to_tgt,
@@ -39,7 +53,7 @@ void permute(
     bool visit_start,
     BitPtr visited,
     BitPtr buffer,
-    KeyShare<mode>* xs) {
+    T* xs) {
 
   if (logn == 1) {
     bool b = false;
@@ -127,7 +141,7 @@ void permute(
     }
 
     // recursively permute the two halves
-    permute<mode>(
+    permute<mode, T>(
         logn-1,
         src_to_tgt,
         tgt_to_src,
@@ -135,7 +149,7 @@ void permute(
         visited,
         buffer,
         xs);
-    permute<mode>(
+    permute<mode, T>(
         logn-1,
         src_to_tgt + n2,
         tgt_to_src + n2,
@@ -156,10 +170,10 @@ void permute(
 }
 
 
-template <Mode mode>
+template <Mode mode, typename T>
 void permute(
     std::span<const std::uint32_t> permutation,
-    std::span<KeyShare<mode>> keys) {
+    std::span<T> keys) {
   const std::size_t n = keys.size();
   if (n > 0) {
     const auto logn = log2(n);
@@ -178,7 +192,7 @@ void permute(
       for (std::size_t i = 0; i < n; ++i) { src_to_tgt[permutation[i]] = i; }
     }
 
-    permute<mode>(
+    permute<mode, T>(
         logn,
         src_to_tgt.data(),
         tgt_to_src.data(),
@@ -188,9 +202,3 @@ void permute(
         keys.data());
   }
 }
-
-
-template void permute(std::span<const std::uint32_t>, std::span<KeyShare<Mode::Input>>);
-template void permute(std::span<const std::uint32_t>, std::span<KeyShare<Mode::Prove>>);
-template void permute(std::span<const std::uint32_t>, std::span<KeyShare<Mode::Check>>);
-template void permute(std::span<const std::uint32_t>, std::span<KeyShare<Mode::Verify>>);

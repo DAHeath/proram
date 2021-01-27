@@ -6,25 +6,28 @@
 #include "share.h"
 
 #include <vector>
+#include <array>
 
 
-template <Mode mode>
+template <Mode mode, std::size_t width>
 struct RORAM {
   public:
     // permutation is provided by input party
     static RORAM fresh(std::size_t n, const std::vector<std::uint32_t>& permutation);
 
-    Share<mode> read();
-    void write(Share<mode>);
+    std::array<Share<mode>, width> read();
+    void write(const std::array<Share<mode>, width>&);
 
   private:
     std::vector<std::uint32_t> permutation;
-    std::vector<Zp> keys;
-    std::vector<KeyShare<mode>> permuted_keys;
-    std::vector<Zp> buffer;
+    std::vector<std::array<Zp, width>> keys;
+    std::vector<std::array<KeyShare<mode>, width>> permuted_keys;
+    std::vector<std::array<Zp, width>> buffer;
     std::size_t w;
     std::size_t r;
 };
+
+#include "roram.hh"
 
 
 #endif

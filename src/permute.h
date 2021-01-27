@@ -5,12 +5,16 @@
 #include "keyshare.h"
 
 #include <span>
+#include <array>
 
 
-template <Mode mode>
+template <Mode mode, typename T>
 void permute(
     std::span<const std::uint32_t> permutation,
-    std::span<KeyShare<mode>> keys);
+    std::span<T>);
+
+
+#include "permute.hh"
 
 
 #endif

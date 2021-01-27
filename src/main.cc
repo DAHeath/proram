@@ -19,10 +19,16 @@ void simple() {
   R.write(con(2));
   R.write(con(3));
 
-  (R.read() - con(0)).assert_zero();
-  (R.read() - con(1)).assert_zero();
-  (R.read() - con(2)).assert_zero();
-  (R.read() - con(3)).assert_zero();
+  for (std::size_t i = 0; i < 4; ++i) {
+    const auto [ix, x] = R.read();
+    (ix - con(i)).assert_zero();
+    (x - con(i)).assert_zero();
+  }
+
+
+  for (std::size_t i = 0; i < (1 << 20) - 100; ++i) {
+    R.read();
+  }
 
   /* auto R = RORAM<mode>::fresh(4, { 1, 3, 2, 0 }); */
 

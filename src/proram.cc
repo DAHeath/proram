@@ -50,9 +50,9 @@ PrORAM<mode> PrORAM<mode>::fresh(std::size_t logn, const std::vector<std::uint32
     s = schedule({ out.order.data(), n });
   }
 
-  auto content = RORAM<mode>::fresh(2*n, s);
+  auto content = RORAM<mode, 2>::fresh(2*n, s);
   for (std::size_t i = 0; i < n; ++i) {
-    content.write(Share<mode>::constant(0));
+    content.write({ Share<mode>::constant(i), Share<mode>::constant(0) });
   }
   out.content = std::move(content);
 
@@ -78,7 +78,7 @@ void PrORAM<mode>::refresh() {
     s = schedule({ order.data() + t, n });
   }
 
-  auto new_content = RORAM<mode>::fresh(2*n, s);
+  auto new_content = RORAM<mode, 2>::fresh(2*n, s);
 
   for (std::size_t i = 0; i < n; ++i) {
     new_content.write(content.read());
@@ -88,7 +88,7 @@ void PrORAM<mode>::refresh() {
 
 
 template <Mode mode>
-Share<mode> PrORAM<mode>::read() {
+std::array<Share<mode>, 2> PrORAM<mode>::read() {
   if (t % n == 0 && t > 0) {
     refresh();
   }
@@ -102,26 +102,27 @@ Share<mode> PrORAM<mode>::read() {
 }
 
 
-template Share<Mode::Input> PrORAM<Mode::Input>::read();
-template Share<Mode::Prove> PrORAM<Mode::Prove>::read();
-template Share<Mode::Check> PrORAM<Mode::Check>::read();
-template Share<Mode::Verify> PrORAM<Mode::Verify>::read();
+template std::array<Share<Mode::Input>, 2> PrORAM<Mode::Input>::read();
+template std::array<Share<Mode::Prove>, 2> PrORAM<Mode::Prove>::read();
+template std::array<Share<Mode::Check>, 2> PrORAM<Mode::Check>::read();
+template std::array<Share<Mode::Verify>, 2> PrORAM<Mode::Verify>::read();
 
 
 template <Mode mode>
-void PrORAM<mode>::write(Share<mode> x) {
+Share<mode> PrORAM<mode>::write(Share<mode> x) {
   if (t % n == 0 && t > 0) {
     refresh();
   }
 
   // TODO index zero check
-  const auto old = content.read();
-  content.write(x);
+  const auto [ix, old] = content.read();
+  content.write({ ix, x });
   ++t;
+  return ix;
 }
 
 
-template void PrORAM<Mode::Input>::write(Share<Mode::Input>);
-template void PrORAM<Mode::Prove>::write(Share<Mode::Prove>);
-template void PrORAM<Mode::Check>::write(Share<Mode::Check>);
-template void PrORAM<Mode::Verify>::write(Share<Mode::Verify>);
+template Share<Mode::Input> PrORAM<Mode::Input>::write(Share<Mode::Input>);
+template Share<Mode::Prove> PrORAM<Mode::Prove>::write(Share<Mode::Prove>);
+template Share<Mode::Check> PrORAM<Mode::Check>::write(Share<Mode::Check>);
+template Share<Mode::Verify> PrORAM<Mode::Verify>::write(Share<Mode::Verify>);

@@ -13,15 +13,15 @@ public:
   // order is given in Input mode
   static PrORAM<mode> fresh(std::size_t logn, const std::vector<std::uint32_t>& order);
 
-  Share<mode> read();
-  void write(Share<mode>);
+  std::array<Share<mode>, 2> read();
+  Share<mode> write(Share<mode>);
 
 private:
   void refresh();
 
   std::size_t n;
   std::size_t t;
-  RORAM<mode> content;
+  RORAM<mode, 2> content;
   std::vector<std::uint32_t> order;
 };
 
