@@ -23,7 +23,7 @@ private:
 
 
 template <Mode mode>
-void bswap(bool b, KeyShare<mode>& x, KeyShare<mode>& y) {
+inline void bswap(bool b, KeyShare<mode>& x, KeyShare<mode>& y) {
   auto xy = x - y;
   scale<mode>(b, { &xy , 1 });
   x -= xy;
@@ -32,7 +32,7 @@ void bswap(bool b, KeyShare<mode>& x, KeyShare<mode>& y) {
 
 
 template <Mode mode, typename T, std::size_t width>
-void bswap(bool b, std::array<T, width>& xs, std::array<T, width>& ys) {
+inline void bswap(bool b, std::array<T, width>& xs, std::array<T, width>& ys) {
   std::array<T, width> xys;
   for (std::size_t i = 0; i < width; ++i) {
     xys[i] = xs[i] - ys[i];
@@ -45,26 +45,24 @@ void bswap(bool b, std::array<T, width>& xs, std::array<T, width>& ys) {
 }
 
 
-template <Mode mode, typename T>
-void permute(
-    std::size_t logn,
+template <Mode mode, std::size_t logn, typename T, bool visit_start>
+inline void permute(
     std::uint32_t* src_to_tgt,
     std::uint32_t* tgt_to_src,
-    bool visit_start,
     BitPtr visited,
     BitPtr buffer,
     T* xs) {
 
-  if (logn == 1) {
+  if constexpr (logn == 1) {
     bool b = false;
     if constexpr (mode == Mode::Input) {
       b = src_to_tgt[0] != 0;
     }
     bswap<mode>(b, xs[0], xs[1]);
   } else {
-    const auto n4 = 1 << (logn - 2);
-    const auto n2 = n4 << 1;
-    const auto n = n2 << 1;
+    constexpr auto n4 = 1 << (logn - 2);
+    constexpr auto n2 = n4 << 1;
+    constexpr auto n = n2 << 1;
 
     const auto modn2 = [&] (std::size_t x) { return x >= n2 ? x - n2 : x; };
     const auto cong = [&] (std::size_t x) { return x >= n2 ? x - n2 : x + n2; };
@@ -141,19 +139,15 @@ void permute(
     }
 
     // recursively permute the two halves
-    permute<mode, T>(
-        logn-1,
+    permute<mode, logn-1, T, !visit_start>(
         src_to_tgt,
         tgt_to_src,
-        !visit_start,
         visited,
         buffer,
         xs);
-    permute<mode, T>(
-        logn-1,
+    permute<mode, logn-1, T, !visit_start>(
         src_to_tgt + n2,
         tgt_to_src + n2,
-        !visit_start,
         visited + n4,
         buffer,
         xs + n2);
@@ -170,35 +164,35 @@ void permute(
 }
 
 
-template <Mode mode, typename T>
+template <Mode mode, std::size_t logn, typename T>
 void permute(
     std::span<const std::uint32_t> permutation,
     std::span<T> keys) {
-  const std::size_t n = keys.size();
-  if (n > 0) {
-    const auto logn = log2(n);
+  const std::size_t n = 1 << logn;
+  assert(keys.size() == n);
 
-    ot_reserve<mode>(n * logn - n + 1);
+  ot_reserve<mode>(n * logn - n + 1);
 
-    // permutation only set up for powers of two
-    std::vector<bool> visited(n/2);
-    std::vector<bool> programming_buffer(n);
-
-    std::vector<std::uint32_t> tgt_to_src = { permutation.begin(), permutation.end() };
-
-    std::vector<std::uint32_t> src_to_tgt;
-    if constexpr (mode == Mode::Input) {
-      src_to_tgt.resize(n);
-      for (std::size_t i = 0; i < n; ++i) { src_to_tgt[permutation[i]] = i; }
-    }
-
-    permute<mode, T>(
-        logn,
-        src_to_tgt.data(),
-        tgt_to_src.data(),
-        false,
-        visited,
-        programming_buffer,
-        keys.data());
+  // permutation only set up for powers of two
+  std::vector<bool> visited;
+  std::vector<bool> programming_buffer;
+  if constexpr (mode == Mode::Input) {
+    visited.resize(n/2);
+    programming_buffer.resize(n);
   }
+
+  std::vector<std::uint32_t> tgt_to_src;
+  std::vector<std::uint32_t> src_to_tgt;
+  if constexpr (mode == Mode::Input) {
+    tgt_to_src = { permutation.begin(), permutation.end() };
+    src_to_tgt.resize(n);
+    for (std::size_t i = 0; i < n; ++i) { src_to_tgt[permutation[i]] = i; }
+  }
+
+  permute<mode, logn, T, false>(
+      src_to_tgt.data(),
+      tgt_to_src.data(),
+      visited,
+      programming_buffer,
+      keys.data());
 }

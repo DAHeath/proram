@@ -9,11 +9,11 @@
 #include <array>
 
 
-template <Mode mode, std::size_t width>
+template <Mode mode, std::size_t width, std::size_t logn>
 struct RORAM {
   public:
     // permutation is provided by input party
-    static RORAM fresh(std::size_t n, const std::vector<std::uint32_t>& permutation);
+    static RORAM fresh(const std::vector<std::uint32_t>& permutation);
 
     std::array<Share<mode>, width> read();
     void write(const std::array<Share<mode>, width>&);

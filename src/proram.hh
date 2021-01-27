@@ -32,10 +32,10 @@ std::vector<std::uint32_t> schedule(std::span<const std::uint32_t> order) {
 }
 
 
-template <Mode mode>
-PrORAM<mode> PrORAM<mode>::fresh(std::size_t logn, const std::vector<std::uint32_t>& order) {
-  const std::size_t n = 1 << logn;
-  PrORAM<mode> out;
+template <Mode mode, std::size_t logn>
+PrORAM<mode, logn> PrORAM<mode, logn>::fresh(const std::vector<std::uint32_t>& order) {
+  constexpr std::size_t n = 1 << logn;
+  PrORAM<mode, logn> out;
   out.n = n;
   out.t = 0;
   out.order = order;
@@ -50,7 +50,7 @@ PrORAM<mode> PrORAM<mode>::fresh(std::size_t logn, const std::vector<std::uint32
     s = schedule({ out.order.data(), n });
   }
 
-  auto content = RORAM<mode, 2>::fresh(2*n, s);
+  auto content = RORAM<mode, 2, logn+1>::fresh(s);
   for (std::size_t i = 0; i < n; ++i) {
     content.write({ Share<mode>::constant(i), Share<mode>::constant(0) });
   }
@@ -60,25 +60,16 @@ PrORAM<mode> PrORAM<mode>::fresh(std::size_t logn, const std::vector<std::uint32
   return out;
 }
 
-template PrORAM<Mode::Input> PrORAM<Mode::Input>::fresh(
-    std::size_t, const std::vector<std::uint32_t>&);
-template PrORAM<Mode::Prove> PrORAM<Mode::Prove>::fresh(
-    std::size_t, const std::vector<std::uint32_t>&);
-template PrORAM<Mode::Check> PrORAM<Mode::Check>::fresh(
-    std::size_t, const std::vector<std::uint32_t>&);
-template PrORAM<Mode::Verify> PrORAM<Mode::Verify>::fresh(
-    std::size_t, const std::vector<std::uint32_t>&);
 
-
-template <Mode mode>
-void PrORAM<mode>::refresh() {
+template <Mode mode, std::size_t logn>
+void PrORAM<mode, logn>::refresh() {
 
   std::vector<std::uint32_t> s;
   if constexpr (mode == Mode::Input || mode == Mode::Prove) {
     s = schedule({ order.data() + t, n });
   }
 
-  auto new_content = RORAM<mode, 2>::fresh(2*n, s);
+  auto new_content = RORAM<mode, 2, logn+1>::fresh(s);
 
   for (std::size_t i = 0; i < n; ++i) {
     new_content.write(content.read());
@@ -87,13 +78,12 @@ void PrORAM<mode>::refresh() {
 }
 
 
-template <Mode mode>
-std::array<Share<mode>, 2> PrORAM<mode>::read() {
+template <Mode mode, std::size_t logn>
+std::array<Share<mode>, 2> PrORAM<mode, logn>::read() {
   if (t % n == 0 && t > 0) {
     refresh();
   }
 
-  // TODO index zero check
   const auto out = content.read();
   content.write(out);
   ++t;
@@ -102,27 +92,14 @@ std::array<Share<mode>, 2> PrORAM<mode>::read() {
 }
 
 
-template std::array<Share<Mode::Input>, 2> PrORAM<Mode::Input>::read();
-template std::array<Share<Mode::Prove>, 2> PrORAM<Mode::Prove>::read();
-template std::array<Share<Mode::Check>, 2> PrORAM<Mode::Check>::read();
-template std::array<Share<Mode::Verify>, 2> PrORAM<Mode::Verify>::read();
-
-
-template <Mode mode>
-Share<mode> PrORAM<mode>::write(Share<mode> x) {
+template <Mode mode, std::size_t logn>
+Share<mode> PrORAM<mode, logn>::write(Share<mode> x) {
   if (t % n == 0 && t > 0) {
     refresh();
   }
 
-  // TODO index zero check
   const auto [ix, old] = content.read();
   content.write({ ix, x });
   ++t;
   return ix;
 }
-
-
-template Share<Mode::Input> PrORAM<Mode::Input>::write(Share<Mode::Input>);
-template Share<Mode::Prove> PrORAM<Mode::Prove>::write(Share<Mode::Prove>);
-template Share<Mode::Check> PrORAM<Mode::Check>::write(Share<Mode::Check>);
-template Share<Mode::Verify> PrORAM<Mode::Verify>::write(Share<Mode::Verify>);

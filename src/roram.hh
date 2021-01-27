@@ -3,9 +3,9 @@
 #include "draw.h"
 
 
-template <Mode mode, std::size_t width>
-RORAM<mode, width> RORAM<mode, width>::fresh(
-    std::size_t n, const std::vector<std::uint32_t>& permutation) {
+template <Mode mode, std::size_t width, std::size_t logn>
+RORAM<mode, width, logn> RORAM<mode, width, logn>::fresh(const std::vector<std::uint32_t>& permutation) {
+  const auto n = 1 << logn;
   if constexpr (mode == Mode::Input) {
     assert(permutation.size() == n);
   }
@@ -24,10 +24,10 @@ RORAM<mode, width> RORAM<mode, width>::fresh(
     pkeys[i] = { KeyShare<mode>::input(k[0]), KeyShare<mode>::input(k[1]) };
   }
 
-  permute<mode>(std::span { permutation }, std::span { pkeys });
+  permute<mode, logn>(std::span { permutation }, std::span { pkeys });
 
 
-  RORAM<mode, width> out;
+  RORAM<mode, width, logn> out;
   out.permutation = permutation;
   out.keys = keys;
   out.permuted_keys = std::move(pkeys);
@@ -40,8 +40,8 @@ RORAM<mode, width> RORAM<mode, width>::fresh(
 }
 
 
-template <Mode mode, std::size_t width>
-std::array<Share<mode>, width> RORAM<mode, width>::read() {
+template <Mode mode, std::size_t width, std::size_t logn>
+std::array<Share<mode>, width> RORAM<mode, width, logn>::read() {
   const auto key = permuted_keys[r];
 
   std::array<Share<mode>, width> out;
@@ -62,8 +62,8 @@ std::array<Share<mode>, width> RORAM<mode, width>::read() {
 }
 
 
-template <Mode mode, std::size_t width>
-void RORAM<mode, width>::write(const std::array<Share<mode>, width>& x) {
+template <Mode mode, std::size_t width, std::size_t logn>
+void RORAM<mode, width, logn>::write(const std::array<Share<mode>, width>& x) {
   Zp key;
   Zp mask;
   for (std::size_t i = 0; i < width; ++i) {

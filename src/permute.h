@@ -8,7 +8,7 @@
 #include <array>
 
 
-template <Mode mode, typename T>
+template <Mode mode, std::size_t logn, typename T>
 void permute(
     std::span<const std::uint32_t> permutation,
     std::span<T>);
