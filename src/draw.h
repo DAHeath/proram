@@ -4,8 +4,11 @@
 
 #include "zp.h"
 
+#include <bitset>
+
 
 Zp draw();
+void seed(std::bitset<128>);
 
 
 #endif

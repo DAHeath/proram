@@ -1,9 +1,10 @@
 #include "share.h"
 #include "hash.h"
 #include "proram.h"
+#include "prf.h"
+#include "draw.h"
 
 
-#include <random>
 #include <iostream>
 
 
@@ -33,17 +34,26 @@ void simple() {
 
 
 int main() {
+  const auto s = rand_key();
 
-  srand(0);
-  Share<Mode::Verify>::delta = rand();
+  hash_init();
+  seed(s);
+  do {
+    Share<Mode::Verify>::delta = draw();
+  } while (Share<Mode::Verify>::delta.data() == 0);
   simple<Mode::Verify>();
-  digest();
+  std::cout << hash_digest() << '\n';
 
   simple<Mode::Input>();
 
-  srand(0);
+  hash_init();
   simple<Mode::Prove>();
-  digest();
+  std::cout << hash_digest() << '\n';
 
+  hash_init();
+  seed(s);
+  do {
+    Share<Mode::Check>::delta = draw();
+  } while (Share<Mode::Check>::delta.data() == 0);
   simple<Mode::Check>();
 }

@@ -6,8 +6,9 @@
 #include <bitset>
 
 
+void hash_init();
 void hash(Zp);
-std::bitset<128> digest();
+std::bitset<256> hash_digest();
 
 
 #endif

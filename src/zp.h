@@ -44,7 +44,7 @@ public:
   EXTEND_OUT_OF_PLACE_MUL(Zp, bool)
 
   std::uint64_t& data() { return val; }
-  std::uint64_t data() const { return val; }
+  const std::uint64_t& data() const { return val; }
 
 private:
   std::uint64_t val;

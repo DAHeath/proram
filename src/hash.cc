@@ -1,20 +1,21 @@
 #include "hash.h"
 
-#include <iostream>
-#include <vector>
+#include <openssl/sha.h>
+
+SHA256_CTX the_hash;
 
 
-std::vector<Zp> alleged_zeros;
+void hash_init() {
+  SHA256_Init(&the_hash);
+}
 
 
 void hash(Zp z) {
-  alleged_zeros.push_back(z);
+  SHA256_Update(&the_hash, reinterpret_cast<const char*>(&z.data()), sizeof(std::uint64_t));
 }
 
-std::bitset<128> digest() {
-  for (const auto& z : alleged_zeros) {
-    std::cout << z.data() << '\n';
-  } std::cout << '\n';
-  alleged_zeros.resize(0);
-  return 0;
+std::bitset<256> hash_digest() {
+  std::bitset<256> tar;
+  SHA256_Final(reinterpret_cast<unsigned char*>(&tar), &the_hash);
+  return tar;
 }
