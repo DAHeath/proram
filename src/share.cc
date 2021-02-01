@@ -48,7 +48,7 @@ template <Mode mode>
 void scale(bool s, std::span<Share<mode>> xs) {
   const auto n = xs.size();
   if constexpr (mode == Mode::Input) {
-    ot_choose(s);
+    ot_choose(n, s);
     for (auto& x: xs) { x *= s; }
   } else if constexpr (mode == Mode::Verify) {
 

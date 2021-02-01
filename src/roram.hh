@@ -3,27 +3,33 @@
 #include "draw.h"
 
 
+// Initialize a roram with permutation pi chosen by P.
 template <Mode mode, std::size_t width, std::size_t logn>
-RORAM<mode, width, logn> RORAM<mode, width, logn>::fresh(const std::vector<std::uint32_t>& permutation) {
+RORAM<mode, width, logn> RORAM<mode, width, logn>::fresh(
+    const std::vector<std::uint32_t>& permutation) {
   const auto n = 1 << logn;
   if constexpr (mode == Mode::Input) {
     assert(permutation.size() == n);
   }
+
   std::vector<std::array<Zp, width>> keys;
   if constexpr (mode == Mode::Verify || mode == Mode::Check) {
     keys.resize(n);
   }
 
-  std::vector<std::array<KeyShare<mode>, 2>> pkeys(n);
+  std::vector<std::array<KeyShare<mode>, width>> pkeys(n);
   for (std::size_t i = 0; i < n; ++i) {
     std::array<Zp, width> k;
     if constexpr (mode == Mode::Verify || mode == Mode::Check) {
-      keys[i] = { draw(), draw() };
+      // verifier initializes random keys
+      for (auto& key: keys[i]) { key = draw(); }
       k = keys[i];
     }
+    // and the parties initialize shares of the keys
     pkeys[i] = { KeyShare<mode>::input(k[0]), KeyShare<mode>::input(k[1]) };
   }
 
+  // The parties apply the chosen permutation.
   permute<mode, logn>(std::span { permutation }, std::span { pkeys });
 
 

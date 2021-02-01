@@ -22,6 +22,7 @@ template KeyShare<Mode::Verify> KeyShare<Mode::Verify>::input(Zp);
 template <Mode mode>
 KeyShare<mode> KeyShare<mode>::input(Zp key, Zp mask) {
   if constexpr (mode == Mode::Input) {
+    choose();
     return KeyShare<mode> { 0 };
   } else if constexpr (mode == Mode::Verify) {
     send(key - mask);
@@ -45,7 +46,7 @@ template <Mode mode>
 void scale(bool s, std::span<KeyShare<mode>> xs) {
   const auto n = xs.size();
   if constexpr (mode == Mode::Input) {
-    ot_choose(s);
+    ot_choose(n, s);
     for (auto& x: xs) { x *= s; }
   } else if constexpr (mode == Mode::Verify) {
 

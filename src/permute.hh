@@ -171,8 +171,6 @@ void permute(
   const std::size_t n = 1 << logn;
   assert(keys.size() == n);
 
-  ot_reserve<mode>(n * logn - n + 1);
-
   // permutation only set up for powers of two
   std::vector<bool> visited;
   std::vector<bool> programming_buffer;
