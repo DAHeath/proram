@@ -7,6 +7,9 @@
 #include <array>
 
 
+// The permutation should specify the target for each source.
+//
+// For example, { 3, 0, 1, 2 } will move the current third element to slot 0.
 template <Mode mode, std::size_t logn, typename T>
 void permute(
     std::span<const std::uint32_t> permutation,

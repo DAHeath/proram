@@ -36,7 +36,6 @@ template <Mode mode, std::size_t logn>
 PrORAM<mode, logn> PrORAM<mode, logn>::fresh(const std::vector<std::uint32_t>& order) {
   constexpr std::size_t n = 1 << logn;
   PrORAM<mode, logn> out;
-  out.n = n;
   out.t = 0;
   out.order = order;
 
@@ -63,7 +62,7 @@ PrORAM<mode, logn> PrORAM<mode, logn>::fresh(const std::vector<std::uint32_t>& o
 
 template <Mode mode, std::size_t logn>
 void PrORAM<mode, logn>::refresh() {
-
+  constexpr std::size_t n = 1 << logn;
   std::vector<std::uint32_t> s;
   if constexpr (mode == Mode::Input || mode == Mode::Prove) {
     s = schedule({ order.data() + t, n });
@@ -80,6 +79,7 @@ void PrORAM<mode, logn>::refresh() {
 
 template <Mode mode, std::size_t logn>
 std::array<Share<mode>, 2> PrORAM<mode, logn>::read() {
+  constexpr std::size_t n = 1 << logn;
   if (t % n == 0 && t > 0) {
     refresh();
   }
@@ -94,6 +94,7 @@ std::array<Share<mode>, 2> PrORAM<mode, logn>::read() {
 
 template <Mode mode, std::size_t logn>
 Share<mode> PrORAM<mode, logn>::write(Share<mode> x) {
+  constexpr std::size_t n = 1 << logn;
   if (t % n == 0 && t > 0) {
     refresh();
   }

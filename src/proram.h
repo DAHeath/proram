@@ -19,7 +19,6 @@ public:
 private:
   void refresh();
 
-  std::size_t n;
   std::size_t t;
   RORAM<mode, 2, logn+1> content;
   std::vector<std::uint32_t> order;

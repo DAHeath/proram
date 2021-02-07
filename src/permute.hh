@@ -11,7 +11,8 @@ inline void permute(
     BitPtr buffer,
     T* xs) {
 
-  if constexpr (logn == 1) {
+  if constexpr (logn == 0) {
+  } else if constexpr (logn == 1) {
     bool b = false;
     if constexpr (mode == Mode::Input) {
       b = src_to_tgt[0] != 0;

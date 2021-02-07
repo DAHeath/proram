@@ -6,8 +6,9 @@
 #include <span>
 
 
+// returns the permutation that implements the partition to the Input party
 template <Mode mode, std::size_t logn, typename T>
-void partition(BitPtr partition, std::span<T>);
+std::vector<std::uint32_t> partition(BitPtr partition, std::span<T>);
 
 
 #include "partition.hh"

@@ -1,9 +1,7 @@
 #include "share.h"
 #include "hash.h"
 #include "proram.h"
-#include "prf.h"
-#include "draw.h"
-#include "partition.h"
+#include "bubbleram.h"
 
 
 #include <iostream>
@@ -21,12 +19,19 @@ void part_test() {
     xs[i] = con(i);
   }
 
-  std::vector<bool> choices = { false, true, false, true, false, true, false, true };
+  std::vector<bool> choices = { false, true, false, false, false, true, false, false };
 
-  partition<mode, 3, Share<mode>>(choices, xs);
+  const auto perm = partition<mode, 3, Share<mode>>(choices, xs);
 
   for (std::size_t i = 0; i < 8; ++i) {
     std::cout << xs[i].data().data() << '\n';
+  }
+
+
+  if constexpr (mode == Mode::Input) {
+    for (const auto& p : perm) {
+      std::cout << p << '\n';
+    }
   }
 }
 
@@ -36,22 +41,15 @@ void simple() {
   const auto con = [](Zp i) { return Share<mode>::constant(i); };
 
 
-  auto R = PrORAM<mode, 18>::fresh({ 1, 0, 2, 3, 0, 1, 2, 3 });
-
-  R.write(con(1));
-  R.write(con(0));
-  R.write(con(2));
-  R.write(con(3));
-
-  for (std::size_t i = 0; i < 4; ++i) {
-    const auto [ix, x] = R.read();
-    (ix - con(i)).assert_zero();
-    (x - con(i)).assert_zero();
-  }
+  constexpr std::size_t logn = 18;
 
 
-  for (std::size_t i = 0; i < (1 << 18)-8; ++i) {
-    R.read();
+  auto R = BubbleRAM<mode, logn>::fresh({ 3, 2, 1, 0, 0, 1, 2, 3 });
+
+
+  for (std::size_t i = 0; i < (1 << logn); ++i) {
+    R.access();
+    /* R.read(); */
   }
 }
 
@@ -68,7 +66,7 @@ auto timed(const F& f) {
 
 
 void prover(Link& link) {
-  part_test<Mode::Input>();
+  simple<Mode::Input>();
 
   link.send(reinterpret_cast<const std::byte*>(&n_ots), sizeof(n_ots));
   link.flush();
@@ -95,7 +93,7 @@ void prover(Link& link) {
   n_messages = 0;
 
   hash_init();
-  part_test<Mode::Prove>();
+  simple<Mode::Prove>();
   std::cout << hash_digest() << '\n';
 
   // TODO
@@ -104,7 +102,7 @@ void prover(Link& link) {
   /* do { */
   /*   Share<Mode::Check>::delta = draw(); */
   /* } while (Share<Mode::Check>::delta.data() == 0); */
-  /* part_test<Mode::Check>(); */
+  /* simple<Mode::Check>(); */
 }
 
 
@@ -132,8 +130,9 @@ void verifier(Link& link) {
     Share<Mode::Verify>::delta = draw();
   } while (Share<Mode::Verify>::delta.data() == 0);
 
-  part_test<Mode::Verify>();
-  std::cout << messages.size() << '\n';
+  simple<Mode::Verify>();
+  std::cout << "NUM OTS: " << n_ots << '\n';
+  std::cout << "NUM MESSAGES: " << messages.size() << '\n';
   link.send(messages);
 
   std::cout << hash_digest() << '\n';
