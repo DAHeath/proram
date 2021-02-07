@@ -7,6 +7,7 @@
 #include <iostream>
 #include <emp-tool/emp-tool.h>
 #include "link.h"
+#include "measure_link.h"
 #include "ferret.h"
 
 
@@ -44,12 +45,13 @@ void simple() {
   constexpr std::size_t logn = 18;
 
 
-  auto R = BubbleRAM<mode, logn>::fresh({ 3, 2, 1, 0, 0, 1, 2, 3 });
+  /* auto R = BubbleRAM<mode, logn>::fresh({ 3, 2, 1, 0, 0, 1, 2, 3 }); */
+  auto R = PrORAM<mode, logn>::fresh({});
 
 
   for (std::size_t i = 0; i < (1 << logn); ++i) {
-    R.access();
-    /* R.read(); */
+    /* R.access(); */
+    R.read();
   }
 }
 
@@ -156,10 +158,12 @@ int main(int argc, char** argv) {
     }) << '\n';
   } else if (strcmp(argv[1], "V") == 0) {
     emp::NetIO io { nullptr, port };
-    NetLink link { &io };
+    NetLink nlink { &io };
+    MeasureLink link { static_cast<Link*>(&nlink) };
     std::cout << timed([&] {
       verifier(link);
     }) << '\n';
+    std::cout << "BYTES: " << link.traffic() << "\n";
   } else {
     std::cerr << "usage: " << argv[0] << " <P/V> <port>\n";
     std::exit(1);

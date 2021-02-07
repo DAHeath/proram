@@ -2,6 +2,9 @@
 #include <iostream>
 
 
+// TODO better handling of empty order
+
+
 std::vector<std::uint32_t> schedule(std::span<const std::uint32_t> order) {
   const auto n = order.size();
 
