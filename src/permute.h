@@ -1,8 +1,7 @@
 #ifndef PERMUTE_H__
 #define PERMUTE_H__
 
-
-#include "keyshare.h"
+#include "bswap.h"
 
 #include <span>
 #include <array>

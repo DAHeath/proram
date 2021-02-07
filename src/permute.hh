@@ -1,48 +1,6 @@
 #include "permute.h"
 #include "comms.h"
-
-#include <vector>
-
-
-struct BitPtr {
-public:
-  BitPtr() { }
-  BitPtr(std::vector<bool>& data) : data(&data), offset(0) { }
-  BitPtr(std::vector<bool>* data, std::size_t offset)
-    : data(data), offset(offset) { }
-
-  auto operator[](std::size_t ix) { return (*data)[ix + offset]; }
-  auto operator[](std::size_t ix) const { return (*data)[ix + offset]; }
-
-  BitPtr operator+(std::size_t off) const { return { data, offset + off }; }
-
-private:
-  std::vector<bool>* data;
-  std::size_t offset;
-};
-
-
-template <Mode mode>
-inline void bswap(bool b, KeyShare<mode>& x, KeyShare<mode>& y) {
-  auto xy = x - y;
-  scale<mode>(b, { &xy , 1 });
-  x -= xy;
-  y += xy;
-}
-
-
-template <Mode mode, typename T, std::size_t width>
-inline void bswap(bool b, std::array<T, width>& xs, std::array<T, width>& ys) {
-  std::array<T, width> xys;
-  for (std::size_t i = 0; i < width; ++i) {
-    xys[i] = xs[i] - ys[i];
-  }
-  scale<mode>(b, xys);
-  for (std::size_t i = 0; i < width; ++i) {
-    xs[i] -= xys[i];
-    ys[i] += xys[i];
-  }
-}
+#include "bitptr.h"
 
 
 template <Mode mode, std::size_t logn, typename T, bool visit_start>

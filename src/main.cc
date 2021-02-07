@@ -3,6 +3,7 @@
 #include "proram.h"
 #include "prf.h"
 #include "draw.h"
+#include "partition.h"
 
 
 #include <iostream>
@@ -12,11 +13,30 @@
 
 
 template <Mode mode>
+void part_test() {
+  const auto con = [](Zp i) { return Share<mode>::constant(i); };
+
+  std::vector<Share<mode>> xs(8);
+  for (std::size_t i = 0; i < 8; ++i) {
+    xs[i] = con(i);
+  }
+
+  std::vector<bool> choices = { false, true, false, true, false, true, false, true };
+
+  partition<mode, 3, Share<mode>>(choices, xs);
+
+  for (std::size_t i = 0; i < 8; ++i) {
+    std::cout << xs[i].data().data() << '\n';
+  }
+}
+
+
+template <Mode mode>
 void simple() {
   const auto con = [](Zp i) { return Share<mode>::constant(i); };
 
 
-  auto R = PrORAM<mode, 20>::fresh({ 1, 0, 2, 3, 0, 1, 2, 3 });
+  auto R = PrORAM<mode, 18>::fresh({ 1, 0, 2, 3, 0, 1, 2, 3 });
 
   R.write(con(1));
   R.write(con(0));
@@ -30,7 +50,7 @@ void simple() {
   }
 
 
-  for (std::size_t i = 0; i < (1 << 20) - 100; ++i) {
+  for (std::size_t i = 0; i < (1 << 18)-8; ++i) {
     R.read();
   }
 }
@@ -48,11 +68,7 @@ auto timed(const F& f) {
 
 
 void prover(Link& link) {
-
-  /* dispatch_ot_recv(link); */
-  /* dispatch_recv(link); */
-
-  simple<Mode::Input>();
+  part_test<Mode::Input>();
 
   link.send(reinterpret_cast<const std::byte*>(&n_ots), sizeof(n_ots));
   link.flush();
@@ -71,19 +87,15 @@ void prover(Link& link) {
         choice_offset.size() * 16);
 
 
-  std::cout << "HERE\n";
-
   messages.resize(n_messages*5);
   std::cout << n_messages << '\n';
   link.recv(messages);
-
-  std::cout << "THERE\n";
 
   n_ots = 0;
   n_messages = 0;
 
   hash_init();
-  simple<Mode::Prove>();
+  part_test<Mode::Prove>();
   std::cout << hash_digest() << '\n';
 
   // TODO
@@ -92,7 +104,7 @@ void prover(Link& link) {
   /* do { */
   /*   Share<Mode::Check>::delta = draw(); */
   /* } while (Share<Mode::Check>::delta.data() == 0); */
-  /* simple<Mode::Check>(); */
+  /* part_test<Mode::Check>(); */
 }
 
 
@@ -120,7 +132,7 @@ void verifier(Link& link) {
     Share<Mode::Verify>::delta = draw();
   } while (Share<Mode::Verify>::delta.data() == 0);
 
-  simple<Mode::Verify>();
+  part_test<Mode::Verify>();
   std::cout << messages.size() << '\n';
   link.send(messages);
 
