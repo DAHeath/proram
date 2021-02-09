@@ -14,11 +14,12 @@ std::size_t ptr = 0;
 
 void seed(std::bitset<128> s) {
   prg = s;
+  ptr = 0;
 }
 
 
 Zp draw() {
-  if (ptr == 128) {
+  if ((ptr % 128) == 0) {
     // refill
     for (auto& r: rand_buffer) {
       r = prg();

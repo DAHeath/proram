@@ -37,10 +37,10 @@ PrORAM<mode, logn> PrORAM<mode, logn>::fresh(const std::vector<std::uint32_t>& o
   constexpr std::size_t n = 1 << logn;
   PrORAM<mode, logn> out;
   out.t = 0;
-  out.order = order;
 
   if (mode == Mode::Input || mode == Mode::Prove) {
     // ensure the order has a size that is a multiple of n
+    out.order = order;
     out.order.resize(((order.size() + n - 1) / n) * n);
   }
 
