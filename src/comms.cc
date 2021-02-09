@@ -34,8 +34,14 @@ Zp recv() {
   return out;
 }
 
-void check(Zp) {
-  // TODO
+void check(Zp x) {
+  const auto r = recv();
+  if (r.data() != x.data()) {
+    std::cerr << "The verifier tried to cheat!\n";
+    std::cerr << "  Received: " << r.data() << '\n';
+    std::cerr << "  Expected: " << x.data() << '\n';
+    std::exit(1);
+  }
 }
 
 
@@ -84,6 +90,25 @@ std::pair<bool, std::span<Zp>> ot_recv(std::size_t n) {
   return { b, out };
 }
 
-void ot_check(std::span<Zp>) {
-  // TODO
+void ot_check(std::span<Zp> corr) {
+  const auto n = corr.size();
+
+  static std::array<Zp, scratch_cap> lows;
+  static std::array<Zp, scratch_cap> highs;
+
+  assert(n <= scratch_cap);
+
+  auto seed0 = ferret_receipts[n_ots];
+  if (ferret_choices[n_ots/128][n_ots%128]) { seed0 ^= ferret_delta; }
+  const auto seed1 = seed0 ^ ferret_delta;
+
+  draw(seed0, { lows.data(), n });
+  draw(seed1, { highs.data(), n });
+  ++n_ots;
+
+  for (std::size_t i = 0; i < n; ++i) {
+    check(lows[i] + corr[i] - highs[i]);
+    corr[i] = Zp { 0 } - lows[i];
+  }
+
 }

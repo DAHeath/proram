@@ -2,9 +2,6 @@
 #include <iostream>
 
 
-// TODO better handling of empty order
-
-
 std::vector<std::uint32_t> schedule(std::span<const std::uint32_t> order) {
   const auto n = order.size();
 
@@ -57,7 +54,6 @@ PrORAM<mode, logn> PrORAM<mode, logn>::fresh(const std::vector<std::uint32_t>& o
     content.write({ Share<mode>::constant(i), Share<mode>::constant(0) });
   }
   out.content = std::move(content);
-
 
   return out;
 }
