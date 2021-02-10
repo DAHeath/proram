@@ -7,9 +7,9 @@
 #include "measure_link.h"
 
 
-constexpr std::size_t n_access = 1 << 20;
-constexpr std::size_t MIN_LOGN = 17;
-constexpr std::size_t MAX_LOGN = 17;
+constexpr std::size_t n_access = 1 << 14;
+constexpr std::size_t MIN_LOGN = 14;
+constexpr std::size_t MAX_LOGN = 14;
 
 
 

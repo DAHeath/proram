@@ -4,6 +4,7 @@
 #include "zp.h"
 #include "mode.h"
 #include "link.h"
+#include "hash.h"
 
 #include <bitset>
 #include <span>
@@ -14,6 +15,8 @@ void verifier(F, Link&);
 
 template <typename FInput, typename FProve, typename FCheck>
 void prover(FInput, FProve, FCheck, Link&);
+
+void reset();
 
 void choose();
 void send(Zp);
@@ -38,6 +41,8 @@ extern std::vector<std::byte> messages;
 extern std::size_t n_messages;
 extern std::size_t n_ots;
 
+extern Link* the_link;
+extern Hash256 message_hash;
 
 Zp draw();
 void draw(const std::bitset<128>&, std::span<Zp>);

@@ -4,19 +4,10 @@
 
 #include <iostream>
 
-inline void reset() {
-  ferret_delta = 0;
-  ferret_zeros.resize(0);
-  ferret_choices.resize(0);
-  ferret_receipts.resize(0);
-  messages.resize(0);
-  n_messages = 0;
-  n_ots = 0;
-}
-
 
 template <typename F>
 void verifier(F f, Link& link) {
+  the_link = &link;
   reset();
 
   link.recv(reinterpret_cast<std::byte*>(&n_ots), sizeof(n_ots));
@@ -33,14 +24,13 @@ void verifier(F f, Link& link) {
 
   n_ots = 0;
   const std::bitset<128> s = rand_key();
-  hash_init();
   seed(s);
   do {
     Share<Mode::Verify>::delta = draw();
   } while (Share<Mode::Verify>::delta.data() == 0);
 
   f();
-  link.send(messages);
+  flush<Mode::Verify>();
 
   // now that the protocol is done, the prover must commit to her proof
   const auto comm = recv_commitment(link);
@@ -53,7 +43,6 @@ void verifier(F f, Link& link) {
   if (check_commitment_opening(link, hash_digest(), comm)) {
     std::cout << "I am convinced!\n";
     std::cout << "# OTs: " << n_ots << '\n';
-    std::cout << "# Messages: " << messages.size() << '\n';
   } else {
     std::cerr << "The prover tried to cheat!\n";
     std::exit(1);
@@ -64,6 +53,7 @@ void verifier(F f, Link& link) {
 
 template <typename FInput, typename FProve, typename FCheck>
 void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
+  the_link = &link;
   reset();
 
   // run the circuit in input mode
@@ -85,33 +75,34 @@ void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
         choice_offset.data()),
         choice_offset.size() * sizeof(std::bitset<128>));
 
-
-  messages.resize(n_messages*5);
-  link.recv(messages);
-
   // run the circuit in prover mode
-  n_ots = 0;
-  n_messages = 0;
-  hash_init();
+  reset();
   fp();
+
+  const auto message_h = message_hash.digest();
+
 
   // commit to the hash of all zeros
   const auto comm_key = send_commitment(link, hash_digest());
 
   // now we need to check that V's messages were well formed by running in check mode
+
+  reset();
   std::bitset<128> s;
   link.recv(reinterpret_cast<std::byte*>(&s), sizeof(std::bitset<128>));
   link.recv(reinterpret_cast<std::byte*>(&ferret_delta), sizeof(std::bitset<128>));
-
-  n_ots = 0;
-  n_messages = 0;
-  hash_init();
   seed(s);
   do {
     Share<Mode::Check>::delta = draw();
   } while (Share<Mode::Check>::delta.data() == 0);
   // at any point, the check circuit will fail if the verifier's messages are found inconsistent
   fc();
+  flush<Mode::Check>();
+
+  if (message_h != message_hash.digest()) {
+    std::cerr << "The verifier tried to cheat!\n";
+    std::exit(1);
+  }
 
 
   // finally, if the check succeeds, open the commitment
