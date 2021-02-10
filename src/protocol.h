@@ -20,6 +20,10 @@ void send(Zp);
 Zp recv();
 void check(Zp);
 
+template <Mode mode>
+void flush();
+
+
 void ot_choose(std::size_t, bool);
 void ot_send(std::span<Zp>);
 std::pair<bool, std::span<Zp>> ot_recv(std::size_t);

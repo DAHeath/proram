@@ -1,8 +1,8 @@
 #include "protocol.h"
 #include "prg.h"
+#include "hash.h"
 
 #include <vector>
-#include <openssl/sha.h>
 
 
 std::bitset<128> ferret_delta;
@@ -44,6 +44,17 @@ void check(Zp x) {
     std::exit(1);
   }
 }
+
+
+template <Mode mode>
+void flush() {
+}
+
+
+template void flush<Mode::Check>();
+template void flush<Mode::Input>();
+template void flush<Mode::Prove>();
+template void flush<Mode::Verify>();
 
 
 void ot_send(std::span<Zp> corr) {
@@ -177,35 +188,31 @@ void draw(const std::bitset<128>& seed, std::span<Zp> tar) {
 
 
 // zero authentication codes are hashed together; the needed functionality follows
-SHA256_CTX the_hash;
+Hash256 zero_hash;
 
 
 void hash_init() {
-  SHA256_Init(&the_hash);
+  zero_hash = { };
 }
 
 
 void hash(Zp z) {
-  SHA256_Update(&the_hash, reinterpret_cast<const char*>(&z.data()), sizeof(std::uint64_t));
+  zero_hash(reinterpret_cast<const std::byte*>(&z.data()), sizeof(std::uint64_t));
 }
 
 
 std::bitset<256> hash_digest() {
-  std::bitset<256> tar;
-  SHA256_Final(reinterpret_cast<unsigned char*>(&tar), &the_hash);
-  return tar;
+  return zero_hash.digest();
 }
 
 
 
 std::bitset<128> send_commitment(Link& link, const std::bitset<256>& message) {
-  SHA256_CTX h;
-  SHA256_Init(&h);
+  Hash256 h;
   const auto k = rand_key();
-  SHA256_Update(&h, reinterpret_cast<const char*>(&message), sizeof(std::bitset<256>));
-  SHA256_Update(&h, reinterpret_cast<const char*>(&k), sizeof(std::bitset<128>));
-  std::bitset<256> tar;
-  SHA256_Final(reinterpret_cast<unsigned char*>(&tar), &h);
+  h(reinterpret_cast<const std::byte*>(&message), sizeof(std::bitset<256>));
+  h(reinterpret_cast<const std::byte*>(&k), sizeof(std::bitset<128>));
+  const std::bitset<256> tar = h.digest();
   link.send(reinterpret_cast<const std::byte*>(&tar), sizeof(std::bitset<256>));
   return k;
 }
@@ -227,12 +234,10 @@ bool check_commitment_opening(
   std::bitset<128> key;
   link.recv(reinterpret_cast<std::byte*>(&key), sizeof(std::bitset<128>));
 
-  SHA256_CTX h;
-  SHA256_Init(&h);
-  SHA256_Update(&h, reinterpret_cast<const char*>(&expected), sizeof(std::bitset<256>));
-  SHA256_Update(&h, reinterpret_cast<const char*>(&key), sizeof(std::bitset<128>));
-  std::bitset<256> tar;
-  SHA256_Final(reinterpret_cast<unsigned char*>(&tar), &h);
+  Hash256 h;
+  h(reinterpret_cast<const std::byte*>(&expected), sizeof(std::bitset<256>));
+  h(reinterpret_cast<const std::byte*>(&key), sizeof(std::bitset<128>));
+  const std::bitset<256> tar = h.digest();
 
   return tar == actual;
 }
