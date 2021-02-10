@@ -1,7 +1,6 @@
 #include "share.h"
-#include "hash.h"
-#include "commitment.h"
 #include "ferret.h"
+#include "prg.h"
 
 #include <iostream>
 
@@ -43,11 +42,14 @@ void verifier(F f, Link& link) {
   f();
   link.send(messages);
 
+  // now that the protocol is done, the prover must commit to her proof
   const auto comm = recv_commitment(link);
 
+  // now send all randomness so prover can check verifier did not cheat
   link.send(reinterpret_cast<const std::byte*>(&s), sizeof(std::bitset<128>));
   link.send(reinterpret_cast<const std::byte*>(&ferret_delta), sizeof(std::bitset<128>));
 
+  // open the commitment: if it is as expected, the proof is convincing
   if (check_commitment_opening(link, hash_digest(), comm)) {
     std::cout << "I am convinced!\n";
     std::cout << "# OTs: " << n_ots << '\n';
@@ -64,6 +66,7 @@ template <typename FInput, typename FProve, typename FCheck>
 void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
   reset();
 
+  // run the circuit in input mode
   fi();
 
   link.send(reinterpret_cast<const std::byte*>(&n_ots), sizeof(n_ots));
@@ -84,18 +87,18 @@ void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
 
 
   messages.resize(n_messages*5);
-  std::cout << n_messages << '\n';
   link.recv(messages);
 
+  // run the circuit in prover mode
   n_ots = 0;
   n_messages = 0;
-
   hash_init();
   fp();
 
+  // commit to the hash of all zeros
   const auto comm_key = send_commitment(link, hash_digest());
 
-  // now we need to check that V's messages were well formed
+  // now we need to check that V's messages were well formed by running in check mode
   std::bitset<128> s;
   link.recv(reinterpret_cast<std::byte*>(&s), sizeof(std::bitset<128>));
   link.recv(reinterpret_cast<std::byte*>(&ferret_delta), sizeof(std::bitset<128>));
@@ -107,9 +110,11 @@ void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
   do {
     Share<Mode::Check>::delta = draw();
   } while (Share<Mode::Check>::delta.data() == 0);
+  // at any point, the check circuit will fail if the verifier's messages are found inconsistent
   fc();
 
 
+  // finally, if the check succeeds, open the commitment
   open_commitment(link, comm_key);
 }
 

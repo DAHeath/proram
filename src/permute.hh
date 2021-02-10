@@ -1,5 +1,4 @@
 #include "permute.h"
-#include "comms.h"
 #include "bitptr.h"
 
 

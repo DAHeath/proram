@@ -1,6 +1,6 @@
 #include "roram.h"
 #include "permute.h"
-#include "draw.h"
+#include "protocol.h"
 
 
 // Initialize a roram with permutation pi chosen by P.

@@ -1,6 +1,5 @@
 #include "share.h"
-#include "hash.h"
-#include "comms.h"
+#include "protocol.h"
 
 #include <vector>
 #include <bitset>

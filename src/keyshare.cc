@@ -1,6 +1,5 @@
 #include "keyshare.h"
-#include "comms.h"
-#include "draw.h"
+#include "protocol.h"
 
 
 template <Mode mode>

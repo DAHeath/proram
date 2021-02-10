@@ -8,8 +8,8 @@
 
 
 constexpr std::size_t n_access = 1 << 20;
-constexpr std::size_t MIN_LOGN = 5;
-constexpr std::size_t MAX_LOGN = 20;
+constexpr std::size_t MIN_LOGN = 17;
+constexpr std::size_t MAX_LOGN = 17;
 
 
 

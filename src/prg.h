@@ -1,15 +1,15 @@
-#ifndef PRG_H__
-#define PRG_H__
+#ifndef Prg_H__
+#define Prg_H__
 
 
 #include "prf.h"
 
 
-struct PRG {
+struct Prg {
 public:
-  PRG() : nonce(0) { }
-  PRG(PRF prf) : prf(std::move(prf)), nonce(0) { }
-  PRG(std::bitset<128> seed) : prf(std::move(seed)), nonce(0) { }
+  Prg() : nonce(0) { }
+  Prg(PRF prf) : prf(std::move(prf)), nonce(0) { }
+  Prg(std::bitset<128> seed) : prf(std::move(seed)), nonce(0) { }
 
   std::bitset<128> operator()() { return prf(nonce++); }
 
