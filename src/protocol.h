@@ -16,7 +16,7 @@ void verifier(F, Link&);
 template <typename FInput, typename FProve, typename FCheck>
 void prover(FInput, FProve, FCheck, Link&);
 
-void reset();
+void reset(std::bitset<128>);
 
 void choose();
 void send(Zp);
@@ -42,7 +42,7 @@ extern std::size_t n_messages;
 extern std::size_t n_ots;
 
 extern Link* the_link;
-extern Hash256 message_hash;
+extern __int128 message_hash;
 
 Zp draw();
 void draw(const std::bitset<128>&, std::span<Zp>);

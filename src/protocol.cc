@@ -4,6 +4,36 @@
 #include <vector>
 
 
+struct ZpPrg {
+public:
+  ZpPrg() : ptr(80) { }
+  ZpPrg(std::bitset<128> s) : prg(s), ptr(80) { }
+
+  Zp operator()() {
+    std::uint64_t content = 0;
+    do {
+      if (ptr == 80) {
+        // refill
+        for (auto& r: rand_buffer) {
+          r = prg();
+        }
+        ptr = 0;
+      }
+      const std::uint64_t* buf = reinterpret_cast<const std::uint64_t*>(rand_buffer.data());
+      content = buf[ptr] & 0xFFFFFFFFFF;
+      ++ptr;
+    } while (content >= Zp::p);
+    return Zp { content };
+  }
+
+private:
+  Prg prg;
+  std::array<std::bitset<128>, 40> rand_buffer;
+  std::size_t ptr;
+};
+
+
+
 Link* the_link;
 
 
@@ -16,15 +46,18 @@ std::size_t n_messages = 0;
 std::size_t n_ots = 0;
 
 
-Hash256 message_hash;
+/* Hash256 message_hash; */
+__int128 message_hash;
+ZpPrg random_vector_gen;
 
 
 constexpr std::size_t MESSAGE_BUFFER_SIZE = 1 << 18;
 std::vector<std::byte> messages(MESSAGE_BUFFER_SIZE*5);
 
 
-void reset() {
-  message_hash = { };
+void reset(std::bitset<128> rs) {
+  message_hash = 0;
+  random_vector_gen = rs;
   ferret_delta = 0;
   ferret_zeros.clear();
   ferret_choices.clear();
@@ -56,11 +89,13 @@ Zp recv() {
   }
   Zp out;
   memcpy(&out.data(), messages.data() + 5*n_messages, 5);
+  message_hash += random_vector_gen().data() * out.data();
   ++n_messages;
   return out;
 }
 
 void check(Zp x) {
+  message_hash += random_vector_gen().data() * x.data();
   if (n_messages == MESSAGE_BUFFER_SIZE) {
     flush<Mode::Check>();
   }
@@ -73,7 +108,6 @@ template <Mode mode>
 void flush() {
   if constexpr (mode == Mode::Prove) {
     the_link->recv(messages);
-    message_hash(messages);
     n_messages = 0;
   } else if constexpr (mode == Mode::Verify) {
     the_link->send(messages);
@@ -81,7 +115,6 @@ void flush() {
     std::fill(messages.begin(), messages.end(), std::byte { 0 });
     n_messages = 0;
   } else if constexpr (mode == Mode::Check) {
-    message_hash(messages);
     std::fill(messages.begin(), messages.end(), std::byte { 0 });
     n_messages = 0;
   }
@@ -165,33 +198,6 @@ void ot_check(std::span<Zp> corr) {
 // We draw authentication codes randomly
 
 
-struct ZpPrg {
-public:
-  ZpPrg() : ptr(128) { }
-  ZpPrg(std::bitset<128> s) : prg(s), ptr(128) { }
-
-  Zp operator()() {
-    std::uint64_t content = 0;
-    do {
-      if ((ptr ^ 128) == 0) {
-        // refill
-        for (auto& r: rand_buffer) {
-          r = prg();
-        }
-        ptr = 0;
-      }
-      memcpy(&content, (reinterpret_cast<const std::byte*>(rand_buffer.data())) + 5*ptr, 5);
-      ++ptr;
-    } while (content >= Zp::p);
-    return Zp { content };
-  }
-
-private:
-  Prg prg;
-  std::array<std::bitset<128>, 40> rand_buffer;
-  std::size_t ptr;
-};
-
 ZpPrg the_prg;
 
 
@@ -210,9 +216,10 @@ void draw(const std::bitset<128>& seed, std::span<Zp> tar) {
   // WHP, the source will simply contain candidate prime field elements.
   // Therefore, try to extract these for small values of n first, and only
   // generate PRG values if this is impossible.
-  if (tar.size() <= 3) {
+  if (tar.size() <= 2) {
+    const std::uint64_t* buf = reinterpret_cast<const std::uint64_t*>(&seed);
     for (std::size_t i = 0; i < tar.size(); ++i) {
-      memcpy(&(tar[i].data()), ((const char*)&seed) + 5*i, 5);
+      tar[i] = buf[i] & 0xFFFFFFFFFF;
       if (tar[i].data() >= Zp::p) {
         // if we go out of bounds, use PRF to construct a fresh seed and try
         // again
@@ -221,11 +228,11 @@ void draw(const std::bitset<128>& seed, std::span<Zp> tar) {
       }
     }
   } else {
-    // if there are more than 3 required primes, split into groups of 3
+    // if there are more than 2 required primes, split into groups of 2
     Prg prg(seed);
-    std::size_t nsubs = (tar.size()+2)/3;
+    std::size_t nsubs = (tar.size()+1)/2;
     for (std::size_t i = 0; i < nsubs; ++i) {
-      draw(prg(), tar.subspan(3*i, 3));
+      draw(prg(), tar.subspan(2*i, 2));
     }
   }
 }

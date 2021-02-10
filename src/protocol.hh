@@ -8,7 +8,7 @@
 template <typename F>
 void verifier(F f, Link& link) {
   the_link = &link;
-  reset();
+  reset(0);
 
   link.recv(reinterpret_cast<std::byte*>(&n_ots), sizeof(n_ots));
 
@@ -53,8 +53,10 @@ void verifier(F f, Link& link) {
 
 template <typename FInput, typename FProve, typename FCheck>
 void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
+  const std::bitset<128> vector_gen = rand_key();
+
   the_link = &link;
-  reset();
+  reset(vector_gen);
 
   // run the circuit in input mode
   fi();
@@ -76,10 +78,10 @@ void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
         choice_offset.size() * sizeof(std::bitset<128>));
 
   // run the circuit in prover mode
-  reset();
+  reset(vector_gen);
   fp();
 
-  const auto message_h = message_hash.digest();
+  const auto message_h = message_hash;
 
 
   // commit to the hash of all zeros
@@ -87,7 +89,7 @@ void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
 
   // now we need to check that V's messages were well formed by running in check mode
 
-  reset();
+  reset(vector_gen);
   std::bitset<128> s;
   link.recv(reinterpret_cast<std::byte*>(&s), sizeof(std::bitset<128>));
   link.recv(reinterpret_cast<std::byte*>(&ferret_delta), sizeof(std::bitset<128>));
@@ -99,7 +101,7 @@ void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
   fc();
   flush<Mode::Check>();
 
-  if (message_h != message_hash.digest()) {
+  if (message_h != message_hash) {
     std::cerr << "The verifier tried to cheat!\n";
     std::exit(1);
   }
