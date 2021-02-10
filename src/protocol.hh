@@ -7,6 +7,7 @@
 
 template <typename F>
 void verifier(F f, Link& link) {
+  ferret_choices.clear();
   the_link = &link;
   reset(0);
 
@@ -53,6 +54,8 @@ void verifier(F f, Link& link) {
 
 template <typename FInput, typename FProve, typename FCheck>
 void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
+  ferret_choices.clear();
+  ferret_receipts.clear();
   const std::bitset<128> vector_gen = rand_key();
 
   the_link = &link;

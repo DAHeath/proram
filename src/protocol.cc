@@ -60,8 +60,6 @@ void reset(std::bitset<128> rs) {
   random_vector_gen = rs;
   ferret_delta = 0;
   ferret_zeros.clear();
-  ferret_choices.clear();
-  ferret_receipts.clear();
   std::fill(messages.begin(), messages.end(), std::byte { 0 });
   n_messages = 0;
   n_ots = 0;
@@ -146,10 +144,10 @@ void ot_send(std::span<Zp> corr) {
 }
 
 void ot_choose(std::size_t n, bool b) {
-  if ((n_ots % 128) == 0) {
+  if ((n_ots & 0x7F) == 0) {
     ferret_choices.push_back(0);
   }
-  ferret_choices[n_ots/128][n_ots%128] = b;
+  ferret_choices[n_ots >> 7][n_ots & 0x7F] = b;
   ++n_ots;
 }
 
@@ -159,7 +157,7 @@ std::pair<bool, std::span<Zp>> ot_recv(std::size_t n) {
   assert(n <= scratch_cap);
   std::span<Zp> out { gen.data(), n };
 
-  bool b = ferret_choices[n_ots/128][n_ots%128];
+  bool b = ferret_choices[n_ots >> 7][n_ots & 0x7F];
   draw(ferret_receipts[n_ots], out);
   ++n_ots;
   for (std::size_t i = 0; i < n; ++i) {
@@ -180,7 +178,7 @@ void ot_check(std::span<Zp> corr) {
   assert(n <= scratch_cap);
 
   auto seed0 = ferret_receipts[n_ots];
-  if (ferret_choices[n_ots/128][n_ots%128]) { seed0 ^= ferret_delta; }
+  if (ferret_choices[n_ots >> 7][n_ots & 0x7F]) { seed0 ^= ferret_delta; }
   const auto seed1 = seed0 ^ ferret_delta;
 
   draw(seed0, { lows.data(), n });
