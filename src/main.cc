@@ -6,6 +6,8 @@
 #include <emp-tool/emp-tool.h>
 #include "measure_link.h"
 #include "cpu.hh"
+#include "select.h"
+#include "rom.h"
 
 
 constexpr std::size_t n_access = 1 << 20;
@@ -15,15 +17,30 @@ constexpr std::size_t MAX_LOGN = 19;
 
 
 template <std::size_t logn, Mode mode>
-void simple(const std::vector<std::uint32_t>& order) {
-  /* auto R = BubbleRAM<mode, logn>::fresh(order); */
-  auto R = PrORAM<mode, logn>::fresh(order);
+void test(const std::vector<std::uint32_t>&) {
 
-
-  for (std::size_t i = 0; i < n_access; ++i) {
-    /* R.access(); */
-    R.read();
+  std::vector<std::array<Share<mode>, 1>> ss(4);
+  for (std::size_t i = 0 ; i < 4; ++i) {
+    ss[i] = { Share<mode>::constant(i + 10) };
   }
+
+
+  std::vector<std::uint32_t> order = { 2, 0, 1, 3, 2, 2, 1, 1, 3 };
+
+  ROM<mode, 1, 2> rom(ss, order);
+
+
+  (rom.next()[1] - Share<mode>::constant(12)).assert_zero();
+  (rom.next()[1] - Share<mode>::constant(10)).assert_zero();
+  (rom.next()[1] - Share<mode>::constant(11)).assert_zero();
+  (rom.next()[1] - Share<mode>::constant(13)).assert_zero();
+  (rom.next()[1] - Share<mode>::constant(12)).assert_zero();
+  (rom.next()[1] - Share<mode>::constant(12)).assert_zero();
+  (rom.next()[1] - Share<mode>::constant(11)).assert_zero();
+  (rom.next()[1] - Share<mode>::constant(11)).assert_zero();
+  (rom.next()[1] - Share<mode>::constant(13)).assert_zero();
+  (rom.next()[1] - Share<mode>::constant(10)).assert_zero();
+
 }
 
 
@@ -48,9 +65,9 @@ void prover_loop(Link& link) {
     std::cout << logn << '\n';
     std::cout << timed([&] {
       prover(
-          [&] { simple<logn, Mode::Input>(order); },
-          [&] { simple<logn, Mode::Prove>(order); },
-          [&] { simple<logn, Mode::Check>({}); },
+          [&] { test<logn, Mode::Input>(order); },
+          [&] { test<logn, Mode::Prove>(order); },
+          [&] { test<logn, Mode::Check>({}); },
           link);
     }) << '\n';
 
@@ -65,7 +82,7 @@ void verifier_loop(Link& link) {
     MeasureLink mlink { static_cast<Link*>(&link) };
     std::cout << timed([&] {
       verifier(
-          [&] { simple<logn, Mode::Verify>({}); },
+          [&] { test<logn, Mode::Verify>({}); },
           mlink);
     }) << '\n';
     std::cout << "BYTES: " << mlink.traffic() << "\n";
