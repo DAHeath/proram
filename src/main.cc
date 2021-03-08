@@ -1,6 +1,7 @@
 #include "proram.h"
 #include "bubbleram.h"
 #include "protocol.h"
+#include "double_buffer.h"
 
 
 #include <emp-tool/emp-tool.h>
