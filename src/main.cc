@@ -1,11 +1,11 @@
 #include "proram.h"
 #include "bubbleram.h"
 #include "protocol.h"
-#include "double_buffer.h"
 
 
 #include <emp-tool/emp-tool.h>
 #include "measure_link.h"
+#include "cpu.hh"
 
 
 constexpr std::size_t n_access = 1 << 20;

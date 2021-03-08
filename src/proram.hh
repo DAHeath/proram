@@ -5,10 +5,10 @@
 std::vector<std::uint32_t> schedule(std::span<const std::uint32_t> order) {
   const auto n = order.size();
 
-  // the table tracks where each RAM index lives in the RORAM
+  // the table tracks where each RAM index lives in the SwordRAM
   std::vector<std::uint32_t> table(n);
 
-  // upon initialization, each index i resides in location i of the RORAM
+  // upon initialization, each index i resides in location i of the SwordRAM
   for (std::size_t i = 0; i < n; ++i) {
     table[i] = i;
   }
@@ -23,7 +23,7 @@ std::vector<std::uint32_t> schedule(std::span<const std::uint32_t> order) {
     slot = n + i;
   }
 
-  // after n accesses, we read all elements from the RORAM in RAM order
+  // after n accesses, we read all elements from the SwordRAM in RAM order
   for (std::size_t i = 0; i < n; ++i) {
     s[i + n] = table[i];
   }
@@ -49,7 +49,7 @@ PrORAM<mode, logn> PrORAM<mode, logn>::fresh(const std::vector<std::uint32_t>& o
     s = schedule({ out.order.data(), n });
   }
 
-  auto content = RORAM<mode, 2, logn+1>::fresh(s);
+  auto content = SwordRAM<mode, 2, logn+1>::fresh(s);
   for (std::size_t i = 0; i < n; ++i) {
     content.write({ Share<mode>::constant(i), Share<mode>::constant(0) });
   }
@@ -67,7 +67,7 @@ void PrORAM<mode, logn>::refresh() {
     s = schedule({ order.data() + t, n });
   }
 
-  auto new_content = RORAM<mode, 2, logn+1>::fresh(s);
+  auto new_content = SwordRAM<mode, 2, logn+1>::fresh(s);
 
   for (std::size_t i = 0; i < n; ++i) {
     new_content.write(content.read());

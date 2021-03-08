@@ -1,5 +1,5 @@
-#ifndef RORAM_H__
-#define RORAM_H__
+#ifndef SWORDRAM_H__
+#define SWORDRAM_H__
 
 
 #include "keyshare.h"
@@ -10,10 +10,10 @@
 
 
 template <Mode mode, std::size_t width, std::size_t logn>
-struct RORAM {
+struct SwordRAM {
   public:
     // permutation is provided by input party
-    static RORAM fresh(const std::vector<std::uint32_t>& permutation);
+    static SwordRAM fresh(const std::vector<std::uint32_t>& permutation);
 
     std::array<Share<mode>, width> read();
     void write(const std::array<Share<mode>, width>&);
@@ -27,7 +27,7 @@ struct RORAM {
     std::size_t r;
 };
 
-#include "roram.hh"
+#include "swordram.hh"
 
 
 #endif

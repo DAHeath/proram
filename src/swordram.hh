@@ -1,11 +1,11 @@
-#include "roram.h"
+#include "swordram.h"
 #include "permute.h"
 #include "protocol.h"
 
 
-// Initialize a roram with permutation pi chosen by P.
+// Initialize a swordram with permutation pi chosen by P.
 template <Mode mode, std::size_t width, std::size_t logn>
-RORAM<mode, width, logn> RORAM<mode, width, logn>::fresh(
+SwordRAM<mode, width, logn> SwordRAM<mode, width, logn>::fresh(
     const std::vector<std::uint32_t>& permutation) {
   const auto n = 1 << logn;
   if constexpr (mode == Mode::Input) {
@@ -33,7 +33,7 @@ RORAM<mode, width, logn> RORAM<mode, width, logn>::fresh(
   permute<mode, logn>(std::span { permutation }, std::span { pkeys });
 
 
-  RORAM<mode, width, logn> out;
+  SwordRAM<mode, width, logn> out;
   out.permutation = permutation;
   out.keys = keys;
   out.permuted_keys = std::move(pkeys);
@@ -47,7 +47,7 @@ RORAM<mode, width, logn> RORAM<mode, width, logn>::fresh(
 
 
 template <Mode mode, std::size_t width, std::size_t logn>
-std::array<Share<mode>, width> RORAM<mode, width, logn>::read() {
+std::array<Share<mode>, width> SwordRAM<mode, width, logn>::read() {
   const auto key = permuted_keys[r];
 
   std::array<Share<mode>, width> out;
@@ -69,7 +69,7 @@ std::array<Share<mode>, width> RORAM<mode, width, logn>::read() {
 
 
 template <Mode mode, std::size_t width, std::size_t logn>
-void RORAM<mode, width, logn>::write(const std::array<Share<mode>, width>& x) {
+void SwordRAM<mode, width, logn>::write(const std::array<Share<mode>, width>& x) {
   Zp key;
   Zp mask;
   for (std::size_t i = 0; i < width; ++i) {

@@ -2,7 +2,7 @@
 #define PRORAM_H__
 
 
-#include "roram.h"
+#include "swordram.h"
 
 
 template <Mode mode, std::size_t logn>
@@ -20,7 +20,7 @@ private:
   void refresh();
 
   std::size_t t;
-  RORAM<mode, 2, logn+1> content;
+  SwordRAM<mode, 2, logn+1> content;
   std::vector<std::uint32_t> order;
 };
 
