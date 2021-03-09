@@ -8,6 +8,7 @@
 #include "cpu.hh"
 #include "select.h"
 #include "rom.h"
+#include "lookup.h"
 
 
 constexpr std::size_t n_access = 1 << 20;
@@ -19,27 +20,42 @@ constexpr std::size_t MAX_LOGN = 19;
 template <std::size_t logn, Mode mode>
 void test(const std::vector<std::uint32_t>&) {
 
-  std::vector<std::array<Share<mode>, 1>> ss(4);
-  for (std::size_t i = 0 ; i < 4; ++i) {
-    ss[i] = { Share<mode>::constant(i + 10) };
-  }
+  /* std::vector<std::array<Share<mode>, 1>> ss(4); */
+  /* for (std::size_t i = 0 ; i < 4; ++i) { */
+  /*   ss[i] = { Share<mode>::constant(i + 10) }; */
+  /* } */
 
 
-  std::vector<std::uint32_t> order = { 2, 0, 1, 3, 2, 2, 1, 1, 3 };
+  /* std::vector<std::uint32_t> order = { 2, 0, 1, 3, 2, 2, 1, 1, 3 }; */
 
-  ROM<mode, 1, 2> rom(ss, order);
+  /* ROM<mode, 1, 2> rom(ss, order); */
 
 
-  (rom.next()[1] - Share<mode>::constant(12)).assert_zero();
-  (rom.next()[1] - Share<mode>::constant(10)).assert_zero();
-  (rom.next()[1] - Share<mode>::constant(11)).assert_zero();
-  (rom.next()[1] - Share<mode>::constant(13)).assert_zero();
-  (rom.next()[1] - Share<mode>::constant(12)).assert_zero();
-  (rom.next()[1] - Share<mode>::constant(12)).assert_zero();
-  (rom.next()[1] - Share<mode>::constant(11)).assert_zero();
-  (rom.next()[1] - Share<mode>::constant(11)).assert_zero();
-  (rom.next()[1] - Share<mode>::constant(13)).assert_zero();
-  (rom.next()[1] - Share<mode>::constant(10)).assert_zero();
+  /* (rom.next()[1] - Share<mode>::constant(12)).assert_zero(); */
+  /* (rom.next()[1] - Share<mode>::constant(10)).assert_zero(); */
+  /* (rom.next()[1] - Share<mode>::constant(11)).assert_zero(); */
+  /* (rom.next()[1] - Share<mode>::constant(13)).assert_zero(); */
+  /* (rom.next()[1] - Share<mode>::constant(12)).assert_zero(); */
+  /* (rom.next()[1] - Share<mode>::constant(12)).assert_zero(); */
+  /* (rom.next()[1] - Share<mode>::constant(11)).assert_zero(); */
+  /* (rom.next()[1] - Share<mode>::constant(11)).assert_zero(); */
+  /* (rom.next()[1] - Share<mode>::constant(13)).assert_zero(); */
+  /* (rom.next()[1] - Share<mode>::constant(10)).assert_zero(); */
+
+
+  std::vector<std::array<Share<mode>, 1>> table(4);
+
+  table[0] = { Share<mode>::constant(13) };
+  table[1] = { Share<mode>::constant(17) };
+  table[2] = { Share<mode>::constant(5) };
+  table[3] = { Share<mode>::constant(12) };
+
+
+  const auto [ix, r] = lookup<mode, 2, 1>(1, std::span { table });
+
+  (ix - Share<mode>::constant(1)).assert_zero();
+  (r - Share<mode>::constant(17)).assert_zero();
+
 
 }
 
