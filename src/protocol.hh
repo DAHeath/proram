@@ -13,7 +13,7 @@ void verifier(F f, Link& link) {
 
   link.recv(reinterpret_cast<std::byte*>(&n_ots), sizeof(n_ots));
 
-  ferret_zeros = ferret_send<Model::Malicious>(link, n_ots, ferret_delta);
+  ferret_zeros = GT::ferret_send<OTModel::Malicious>(link, n_ots, ferret_delta);
   ferret_choices.resize((n_ots + 127)/128);
   link.recv(reinterpret_cast<std::byte*>(
         ferret_choices.data()),
@@ -67,7 +67,7 @@ void prover(FInput fi, FProve fp, FCheck fc, Link& link) {
   link.send(reinterpret_cast<const std::byte*>(&n_ots), sizeof(n_ots));
   link.flush();
 
-  ferret_receipts = ferret_recv<Model::Malicious>(link, n_ots);
+  ferret_receipts = GT::ferret_recv<OTModel::Malicious>(link, n_ots);
 
   // calculate ot offset bits from random ot bits
   std::vector<std::bitset<128>> choice_offset(ferret_choices.size());

@@ -4,6 +4,7 @@
 
 
 #include <emp-tool/emp-tool.h>
+#include "net_link.h"
 #include "measure_link.h"
 #include "cpu.hh"
 #include "select.h"
@@ -116,12 +117,10 @@ int main(int argc, char** argv) {
   const int port = atoi(argv[2]);
 
   if (strcmp(argv[1], "P") == 0) {
-    emp::NetIO io { "127.0.0.1", port };
-    NetLink link { &io };
+    GT::NetLink link { "127.0.0.1", port };
     prover_loop<MIN_LOGN>(link);
   } else if (strcmp(argv[1], "V") == 0) {
-    emp::NetIO io { nullptr, port };
-    NetLink link { &io };
+    GT::NetLink link { nullptr, port };
     verifier_loop<MIN_LOGN>(link);
   } else {
     std::cerr << "usage: " << argv[0] << " <P/V> <port>\n";
